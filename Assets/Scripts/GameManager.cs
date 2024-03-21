@@ -12,11 +12,13 @@ public class GameManager : MonoBehaviour
 {
     public int Width, Height, PaddingTop, remainingMoves;
     public string[] data_grid;
+    public Button levelButton, menuButton;
     public TMPro.TMP_Text remainingMovesText;
     [SerializeField] private GameObject[] NormalCubePrefabs;
     [SerializeField] private GameObject[] ObstacleCubePrefabs;
     [SerializeField] private GameObject[] BreakCubePrefabs;
     [SerializeField] private Transform SetBg, SetItem;
+    [SerializeField] private GameObject GridCanvas, GridBg;
     public static Dictionary<Tuple<int, int>, PickUp> Item = new Dictionary<Tuple<int, int>, PickUp>();
     private static List<GameObject> DeleteObject = new List<GameObject>();
     public static Dictionary<Tuple<int, int>, List<GameObject>> Square = new Dictionary<Tuple<int, int>, List<GameObject>>();
@@ -24,13 +26,28 @@ public class GameManager : MonoBehaviour
     {
         LoadPlayerLevel();
         Spawn_FillGrid();
+        //CenterGrid(Width, Height);
+        levelButton.onClick.AddListener(() => { LoadLevelScene(); });
+        menuButton.onClick.AddListener(() => { LoadMainScene(); });
         // #1 Start Game
         StartCoroutine(Wait(0.1f, () =>
         {
             StartSquare();
         })); 
     }
-    
+    //private void CenterGrid(int currentWidth, int currentHeight)
+    //{
+    //    int optimalWidth = 9; // The design is optimized for a 9-width grid
+    //    float gridElementWidth = 1.0f; // Assuming each grid element is 1 unit wide
+    //    float centerOffset = (optimalWidth - currentWidth) * gridElementWidth / 2;
+
+    //    // Assuming you have a reference to the parent GameObject of the grid elements
+    //    Vector3 startPosition = GridCanvas.transform.position;
+    //    startPosition.x += centerOffset; // Adjust the start position based on the calculated offset
+    //    GridCanvas.transform.position = startPosition;
+    //    GridBg.transform.localScale.Set(gridElementWidth * currentWidth, gridElementWidth * currentHeight, 1f);
+    //}
+
     private void LoadPlayerLevel()
     {
         int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
@@ -96,6 +113,9 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("Out of moves! Try again.");
+            Item.Clear();
+            FindObjectOfType<FailedTween>().LevelFailed();
+            Debug.Log("Out of moves! Try again.");
         }
     }
     private void UpdateRemainingMovesText()
@@ -116,12 +136,13 @@ public class GameManager : MonoBehaviour
             Item.Clear();
             FindObjectOfType<SuccessTween>().LevelSucceed();
             CompleteLevel();
-            Invoke("LoadMainScene", 5f);
+            Invoke("LoadMainScene", 3.5f);
         }
         else if (remainingMoves <= 0)
         {
             Debug.Log("Out of moves! Try again.");
-            SceneManager.LoadScene("MenuScene");
+            Item.Clear();
+            FindObjectOfType<FailedTween>().LevelFailed();
         }
     }
     
@@ -130,6 +151,13 @@ public class GameManager : MonoBehaviour
         // Load the MainScene after the celebration
         SceneManager.LoadScene("MenuScene");
     }
+
+    private void LoadLevelScene()
+    {
+        // Load the MainScene after the celebration
+        SceneManager.LoadScene("LevelScene");
+    }
+
     private bool IsLevelCompleted()
     {
         foreach (var item in Item.Values)
@@ -138,10 +166,6 @@ public class GameManager : MonoBehaviour
             {
                 return false;
             }
-        }
-        foreach (var item in Item.Values)
-        {
-            Destroy(item.gameObject);
         }
         Debug.Log("CONGRATS BRO.");
         return true; // Placeholder return value
@@ -336,8 +360,8 @@ public class GameManager : MonoBehaviour
                 Item[new Tuple<int, int>(_change.x, _change.y)].transform.position;
             SetBg.GetChild(i).GetComponent<BoxCollider2D>().enabled = false;
         }
-    } 
-
+    }
+    
     private void StartSquare()
     {
         foreach (var item in Item.Values)
@@ -675,7 +699,10 @@ public class GameManager : MonoBehaviour
                 else
                 {
                     SpawnBack(DeleteObject[i].GetComponent<PickUp>());
-                    Destroy(DeleteObject[i]);
+                    if (DeleteObject.Count != 0)
+                    {
+                        Destroy(DeleteObject[i]);
+                    }
                 }
             }
             else // Others wil be break
@@ -739,14 +766,18 @@ public class GameManager : MonoBehaviour
 
     private void EnableBoxCollider2DCallback()
     {
-        for (int i = 0; i < SetBg.childCount; i++)
+        if (SetBg)
         {
-            SetBg.GetChild(i).GetComponent<BoxCollider2D>().enabled = true;
+            for (int i = 0; i < SetBg.childCount; i++)
+            {
+                SetBg.GetChild(i).GetComponent<BoxCollider2D>().enabled = true;
+            }
+            Invoke("DisableBoxCollider2DCallback", 0.1f);
         }
-        Invoke("DisableBoxCollider2DCallback", 0.1f);
     }
     private void DisableBoxCollider2DCallback()
     {
+
         for (int i = 0; i < SetBg.childCount; i++)
         {
             SetBg.GetChild(i).GetComponent<BoxCollider2D>().enabled = false;

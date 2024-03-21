@@ -13,6 +13,7 @@ public class MenuManager : MonoBehaviour
     {
         // debugging
         //PlayerPrefs.SetInt("CurrentLevel", 1);
+
         // Check the current level from PlayerPrefs
         int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
         // Assuming 10 is the total number of levels
