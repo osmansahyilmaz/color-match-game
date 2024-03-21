@@ -10,15 +10,15 @@ using UnityEngine.ParticleSystemJobs;
 
 public class GameManager : MonoBehaviour
 {
-    public int Width, Height, PaddingTop, remainingMoves;
+    public int Width, Height, PaddingTop, remainingMoves, BoxGoalInt, StoneGoalInt, VaseGoalInt;
     public string[] data_grid;
     public Button levelButton, menuButton;
-    public TMPro.TMP_Text remainingMovesText;
+    public TMPro.TMP_Text remainingMovesText, BoxGoalText, StoneGoalText, VaseGoalText;
     [SerializeField] private GameObject[] NormalCubePrefabs;
     [SerializeField] private GameObject[] ObstacleCubePrefabs;
     [SerializeField] private GameObject[] BreakCubePrefabs;
     [SerializeField] private Transform SetBg, SetItem;
-    [SerializeField] private GameObject GridCanvas, GridBg;
+    [SerializeField] private GameObject GridCanvas, GridBg, BoxGoal, StoneGoal, VaseGoal, TickSprite;
     public static Dictionary<Tuple<int, int>, PickUp> Item = new Dictionary<Tuple<int, int>, PickUp>();
     private static List<GameObject> DeleteObject = new List<GameObject>();
     public static Dictionary<Tuple<int, int>, List<GameObject>> Square = new Dictionary<Tuple<int, int>, List<GameObject>>();
@@ -89,15 +89,69 @@ public class GameManager : MonoBehaviour
     {
         // Use levelData to initialize the game level
         Debug.Log($"Initializing Level: {levelData.level_number} with grid size {levelData.grid_width}x{levelData.grid_height} and {levelData.move_count} moves.");
-        // Example initialization code
-        // SetGridSize(levelData.grid_width, levelData.grid_height);
+
+        // Initialization
+        BoxGoalInt = StoneGoalInt = VaseGoalInt = 0;
         Width = levelData.grid_width;
         Height = levelData.grid_height;
         remainingMoves = levelData.move_count;
-        UpdateRemainingMovesText();
         data_grid = levelData.grid;
-        
+        CalculateGoals(levelData.grid);
+        InitGoalTexts();
+        UpdateRemainingMovesText();
         // PopulateGrid(levelData.grid);
+    }
+
+    private void CalculateGoals(string[] grid)
+    {
+        foreach (var item in grid)
+        {
+            if (item == "bo")
+            {
+                BoxGoalInt++;
+            }
+            else if (item == "s")
+            {
+                StoneGoalInt++;
+            }
+            else if (item == "v")
+            {
+                VaseGoalInt++;
+            }
+        }
+    }
+
+    private void InitGoalTexts()
+    {
+        if (BoxGoalInt != 0)
+        {
+            BoxGoalText.SetText(BoxGoalInt.ToString());
+        }
+        else
+        {
+            Destroy(BoxGoal);
+            Destroy(BoxGoalText);
+        }
+
+        if (StoneGoalInt != 0)
+        {
+            StoneGoalText.SetText(StoneGoalInt.ToString());
+        }
+        else
+        {
+            Destroy(StoneGoal);
+            Destroy(StoneGoalText);
+
+        }
+        if (VaseGoalInt != 0)
+        {
+            VaseGoalText.SetText(VaseGoalInt.ToString());
+        }
+        else
+        {
+            Destroy(VaseGoal);
+            Destroy(VaseGoalText);
+        }
     }
 
     // Call this method whenever a move is made
@@ -664,6 +718,31 @@ public class GameManager : MonoBehaviour
                             damageable.TakeDamage(1);
                             if (damageable.IsDestroyed())
                             {
+                                if (Item[key].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box) {
+                                    BoxGoalInt--;
+                                    if (BoxGoalInt > 0)
+                                    {
+                                        BoxGoalText.SetText(BoxGoalInt.ToString());
+                                    }
+                                    else
+                                    {
+                                        GameObject clone = Instantiate(TickSprite, new Vector2(BoxGoalText.transform.position.x, BoxGoalText.transform.position.y), Quaternion.identity);
+                                        Destroy(BoxGoalText);
+                                    }
+                                }
+                                else if (Item[key].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02)
+                                {
+                                    VaseGoalInt--;
+                                    if (VaseGoalInt > 0)
+                                    {
+                                        VaseGoalText.SetText(VaseGoalInt.ToString());
+                                    }
+                                    else
+                                    {
+                                        GameObject clone = Instantiate(TickSprite, new Vector2(VaseGoalText.transform.position.x, VaseGoalText.transform.position.y), Quaternion.identity);
+                                        Destroy(VaseGoalText);
+                                    }
+                                }
                                 SpawnBack(pos.x, pos.y);
                                 Destroy(Item[key].gameObject);
                                 Item.Remove(key);
@@ -830,6 +909,50 @@ public class GameManager : MonoBehaviour
         CheckGameState();
     }
 
+
+    public void BoxGoalUpdate()
+    {
+        BoxGoalInt--;
+        if (BoxGoalInt > 0)
+        {
+            BoxGoalText.SetText(BoxGoalInt.ToString());
+        }
+        else
+        {
+            GameObject clone = Instantiate(TickSprite, new Vector2(BoxGoalText.transform.position.x, BoxGoalText.transform.position.y), Quaternion.identity);
+            Destroy(BoxGoalText);
+        }
+    }
+
+    public void StoneGoalUpdate()
+    {
+        StoneGoalInt--;
+        if (StoneGoalInt > 0)
+        {
+            StoneGoalText.SetText(StoneGoalInt.ToString());
+        }
+        else
+        {
+            GameObject clone = Instantiate(TickSprite, new Vector2(StoneGoalText.transform.position.x, StoneGoalText.transform.position.y), Quaternion.identity);
+            Destroy(StoneGoalText);
+        }
+    }
+
+    public void VaseGoalUpdate()
+    {
+        VaseGoalInt--;
+        if (VaseGoalInt > 0)
+        {
+            VaseGoalText.SetText(VaseGoalInt.ToString());
+        }
+        else
+        {
+            GameObject clone = Instantiate(TickSprite, new Vector2(VaseGoalText.transform.position.x, VaseGoalText.transform.position.y), Quaternion.identity);
+            Destroy(VaseGoalText);
+        }
+    }
+
+
     // Check
     public void CalculateCubeForBomb(IDName i)
     {
@@ -873,6 +996,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[Top].gameObject))
             {
+                if (Item[Top].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[Top].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[Top].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[Top].gameObject);
                 CheckContinueCube_CallBack(Item[Top].GetComponent<IDName>());
             }
@@ -888,6 +1023,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[Down].gameObject))
             {
+                if (Item[Down].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[Down].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[Down].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[Down].gameObject);
                 CheckContinueCube_CallBack(Item[Down].GetComponent<IDName>());
             }
@@ -903,6 +1050,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[Left].gameObject))
             {
+                if (Item[Left].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[Left].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[Left].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[Left].gameObject);
                 CheckContinueCube_CallBack(Item[Left].GetComponent<IDName>());
             }
@@ -918,6 +1077,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[Right].gameObject))
             {
+                if (Item[Right].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[Right].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[Right].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[Right].gameObject);
                 CheckContinueCube_CallBack(Item[Right].GetComponent<IDName>());
             }
@@ -933,6 +1104,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[TopLeft].gameObject))
             {
+                if (Item[TopLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[TopLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[TopLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[TopLeft].gameObject);
                 CheckContinueCube_CallBack(Item[TopLeft].GetComponent<IDName>());
             }
@@ -948,6 +1131,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[TopRight].gameObject))
             {
+                if (Item[TopRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[TopRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[TopRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[TopRight].gameObject);
                 CheckContinueCube_CallBack(Item[TopRight].GetComponent<IDName>());
             }
@@ -963,6 +1158,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[DownLeft].gameObject))
             {
+                if (Item[DownLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[DownLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[DownLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[DownLeft].gameObject);
                 CheckContinueCube_CallBack(Item[DownLeft].GetComponent<IDName>());
             }
@@ -978,6 +1185,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[DownRight].gameObject))
             {
+                if (Item[DownRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[DownRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[DownRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[DownRight].gameObject);
                 CheckContinueCube_CallBack(Item[DownRight].GetComponent<IDName>());
             }
@@ -993,6 +1212,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[TopTop].gameObject))
             {
+                if (Item[TopTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[TopTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[TopTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[TopTop].gameObject);
                 CheckContinueCube_CallBack(Item[TopTop].GetComponent<IDName>());
             }
@@ -1008,6 +1239,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[TopTopLeft].gameObject))
             {
+                if (Item[TopTopLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[TopTopLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[TopTopLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[TopTopLeft].gameObject);
                 CheckContinueCube_CallBack(Item[TopTopLeft].GetComponent<IDName>());
             }
@@ -1023,6 +1266,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[TopTopLeftLeft].gameObject))
             {
+                if (Item[TopTopLeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[TopTopLeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[TopTopLeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[TopTopLeftLeft].gameObject);
                 CheckContinueCube_CallBack(Item[TopTopLeftLeft].GetComponent<IDName>());
             }
@@ -1038,6 +1293,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[TopTopRight].gameObject))
             {
+                if (Item[TopTopRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[TopTopRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[TopTopRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[TopTopRight].gameObject);
                 CheckContinueCube_CallBack(Item[TopTopRight].GetComponent<IDName>());
             }
@@ -1053,6 +1320,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[TopTopRightRight].gameObject))
             {
+                if (Item[TopTopRightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[TopTopRightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[TopTopRightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[TopTopRightRight].gameObject);
                 CheckContinueCube_CallBack(Item[TopTopRightRight].GetComponent<IDName>());
             }
@@ -1068,6 +1347,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[DownDown].gameObject))
             {
+                if (Item[DownDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[DownDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[DownDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[DownDown].gameObject);
                 CheckContinueCube_CallBack(Item[DownDown].GetComponent<IDName>());
             }
@@ -1083,6 +1374,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[DownDownLeft].gameObject))
             {
+                if (Item[DownDownLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[DownDownLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[DownDownLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[DownDownLeft].gameObject);
                 CheckContinueCube_CallBack(Item[DownDownLeft].GetComponent<IDName>());
             }
@@ -1098,6 +1401,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[DownDownLeftLeft].gameObject))
             {
+                if (Item[DownDownLeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[DownDownLeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[DownDownLeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[DownDownLeftLeft].gameObject);
                 CheckContinueCube_CallBack(Item[DownDownLeftLeft].GetComponent<IDName>());
             }
@@ -1111,8 +1426,21 @@ public class GameManager : MonoBehaviour
                 Item[DownDownRight].GetComponent<SpriteRenderer>().sprite = Item[DownDownRight].GetComponent<IDName>().Vase02Sprite;
                 Item[DownDownRight].GetComponent<IDName>().ID = 8;
             }
+
             else if (!DeleteObject.Contains(Item[DownDownRight].gameObject))
             {
+                if (Item[DownDownRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[DownDownRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[DownDownRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[DownDownRight].gameObject);
                 CheckContinueCube_CallBack(Item[DownDownRight].GetComponent<IDName>());
             }
@@ -1128,6 +1456,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[DownDownRightRight].gameObject))
             {
+                if (Item[DownDownRightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[DownDownRightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[DownDownRightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[DownDownRightRight].gameObject);
                 CheckContinueCube_CallBack(Item[DownDownRightRight].GetComponent<IDName>());
             }
@@ -1143,6 +1483,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[RightRight].gameObject))
             {
+                if (Item[RightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[RightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[RightRight].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[RightRight].gameObject);
                 CheckContinueCube_CallBack(Item[RightRight].GetComponent<IDName>());
             }
@@ -1158,6 +1510,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[RightRightTop].gameObject))
             {
+                if (Item[RightRightTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[RightRightTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[RightRightTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[RightRightTop].gameObject);
                 CheckContinueCube_CallBack(Item[RightRightTop].GetComponent<IDName>());
             }
@@ -1173,6 +1537,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[RightRightDown].gameObject))
             {
+                if (Item[RightRightDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[RightRightDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[RightRightDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[RightRightDown].gameObject);
                 CheckContinueCube_CallBack(Item[RightRightDown].GetComponent<IDName>());
             }
@@ -1188,6 +1564,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[LeftLeft].gameObject))
             {
+                if (Item[LeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[LeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[LeftLeft].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[LeftLeft].gameObject);
                 CheckContinueCube_CallBack(Item[LeftLeft].GetComponent<IDName>());
             }
@@ -1203,6 +1591,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[LeftLeftTop].gameObject))
             {
+                if (Item[LeftLeftTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[LeftLeftTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[LeftLeftTop].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[LeftLeftTop].gameObject);
                 CheckContinueCube_CallBack(Item[LeftLeftTop].GetComponent<IDName>());
             }
@@ -1218,6 +1618,18 @@ public class GameManager : MonoBehaviour
             }
             else if (!DeleteObject.Contains(Item[LeftLeftDown].gameObject))
             {
+                if (Item[LeftLeftDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Box && BoxGoal != null)
+                {
+                    BoxGoalUpdate();
+                }
+                else if (Item[LeftLeftDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Stone && StoneGoal != null)
+                {
+                    StoneGoalUpdate();
+                }
+                else if (Item[LeftLeftDown].GetComponent<IDName>().TypeOfCube == IDName.CubeType.Vase_02 && VaseGoal != null)
+                {
+                    VaseGoalUpdate();
+                }
                 DeleteObject.Add(Item[LeftLeftDown].gameObject);
                 CheckContinueCube_CallBack(Item[LeftLeftDown].GetComponent<IDName>());
             }
