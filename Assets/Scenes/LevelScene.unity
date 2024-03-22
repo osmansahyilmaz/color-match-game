@@ -319,6 +319,7 @@ MonoBehaviour:
   StoneGoal: {fileID: 883400731}
   VaseGoal: {fileID: 416658315}
   TickSprite: {fileID: 3668873396902730595, guid: df5b4b0264039f348a872c7e1e43208f, type: 3}
+  Ticks: []
 --- !u!4 &267461599
 Transform:
   m_ObjectHideFlags: 0

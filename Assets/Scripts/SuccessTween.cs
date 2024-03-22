@@ -19,7 +19,12 @@ public class SuccessTween : MonoBehaviour
         LeanTween.moveLocal(bg, new Vector3(1f, 700f, 1f), 0f).setEase(LeanTweenType.easeInOutCubic);
         LeanTween.moveLocal(bg, new Vector3(1f, -100f, 1f), 0f).setDelay(3f).setEase(LeanTweenType.easeInOutCubic);
         LeanTween.scale(bg, new Vector3(1f, 1f, 1f), 0f).setDelay(1.7f).setEase(LeanTweenType.easeInOutCubic);
-
+        
+        foreach (GameObject tick in FindObjectOfType<GameManager>().Ticks)
+        {
+            Destroy(tick);
+        }
+        FindObjectOfType<GameManager>().Ticks.Clear();
         Destroy(canvas);
     }
 }
