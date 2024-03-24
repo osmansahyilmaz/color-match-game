@@ -915,11 +915,13 @@ public class GameManager : MonoBehaviour
         BoxGoalInt--;
         if (BoxGoalInt > 0)
         {
+            Debug.Log("BoxGoalInt--");
             BoxGoalText.SetText(BoxGoalInt.ToString());
         }
         else
         {
-            GameObject clone = Instantiate(TickSprite, new Vector2(BoxGoalText.transform.position.x, BoxGoalText.transform.position.y), Quaternion.identity);
+            Debug.Log("BoxGoalText destroyed and TickSprite Instantiated.");
+            GameObject clone = Instantiate(TickSprite, new Vector3(BoxGoalText.transform.position.x, BoxGoalText.transform.position.y, BoxGoalText.transform.position.z), Quaternion.identity);
             Ticks.Add(clone);
             Destroy(BoxGoalText);
         }
@@ -930,11 +932,13 @@ public class GameManager : MonoBehaviour
         StoneGoalInt--;
         if (StoneGoalInt > 0)
         {
+            Debug.Log("StoneGoalInt--");
             StoneGoalText.SetText(StoneGoalInt.ToString());
         }
         else
         {
-            GameObject clone = Instantiate(TickSprite, new Vector2(StoneGoalText.transform.position.x, StoneGoalText.transform.position.y), Quaternion.identity);
+            Debug.Log("StoneGoalText destroyed and TickSprite Instantiated.");
+            GameObject clone = Instantiate(TickSprite, new Vector3(StoneGoalText.transform.position.x, StoneGoalText.transform.position.y, StoneGoalText.transform.position.z), Quaternion.identity);
             Ticks.Add(clone);
             Destroy(StoneGoalText);
         }
@@ -945,11 +949,13 @@ public class GameManager : MonoBehaviour
         VaseGoalInt--;
         if (VaseGoalInt > 0)
         {
+            Debug.Log("VaseGoalInt--");
             VaseGoalText.SetText(VaseGoalInt.ToString());
         }
         else
         {
-            GameObject clone = Instantiate(TickSprite, new Vector2(VaseGoalText.transform.position.x, VaseGoalText.transform.position.y), Quaternion.identity);
+            Debug.Log("VaseGoalText destroyed and TickSprite Instantiated.");
+            GameObject clone = Instantiate(TickSprite, new Vector3(VaseGoalText.transform.position.x, VaseGoalText.transform.position.y, VaseGoalText.transform.position.z), Quaternion.identity);
             Ticks.Add(clone);
             Destroy(VaseGoalText);
         }
